@@ -1,19 +1,16 @@
 #!/bin/bash
 
-FLAVOR=online
-CURRENTWORKDIR=`pwd`
+source defaults.sh
+source commonFunctions.sh
 
-cd /tmp/tmudholk/gui
-SEARCHFORRUNNINGGUI=`ps aux | grep -v grep | grep visDQMRender`
-if [ -z "${SEARCHFORRUNNINGGUI}" ]; then
-    echo "No DQM process found running!"
-else
-    echo "Stopping DQM processes..."
-fi
+set_guipath
 
-$PWD/current/config/dqmgui/manage -f ${FLAVOR} stop "I did read documentation"
-if [ $? -ne 0 ]; then
-    echo "Something went wrong in trying to stop the DQM instances... are you sure there were any?"
+cd ${GUIPATH}/gui
+show_dqm_status
+
+update_dqm_gui_status
+if [ "${DQM_GUI_STATUS}" == "up" ]; then
+    stop_chosen_flavor ${FLAVOR}
 fi
 
 cd deployment
@@ -26,29 +23,12 @@ if [ "${CURRENTBRANCHNAME}" == "master" ]; then
     echo "On master branch; no need to re-fetch"
 else
     git checkout master && git branch -D ${CURRENTBRANCHNAME} && git fetch my-deployment && git checkout -b ${CURRENTBRANCHNAME} my-deployment/${CURRENTBRANCHNAME}
-    if [ $? -ne 0 ]; then
-        echo "Unable to check out new version of ${CURRENTBRANCHNAME}!"
-    fi
+    print_potential_error $? "Unable to check out new version of ${CURRENTBRANCHNAME}!"
 fi
 cd ..
-LATESTTAG=`curl -s https://api.github.com/repos/dmwm/deployment/tags | grep name | grep -m 1 HG | grep -o -e HG[0-9][0-9][0-9][0-9][a-z]`
-if [ -z "${LATESTTAG}" ]; then
-    echo "Latest release not found!"
-    exit
-else
-    echo "Latest release found: ${LATESTTAG}. (Re-)deploying..."
-fi
 
-$PWD/deployment/Deploy -A slc6_amd64_gcc493 -r "comp=comp" -R comp@${LATESTTAG} -t MYDEV -s "prep sw post" $PWD dqmgui/bare
-if [ $? -ne 0 ]; then
-    echo "Unable to (re-)deploy!"
-    exit
-fi
+set_latest_tag
 
-$PWD/current/config/dqmgui/manage -f ${FLAVOR} start "I did read documentation"
-if [ $? -ne 0 ]; then
-    echo "Unable to start online DQM!"
-    exit
-fi
+dqm_deploy ${LATESTTAG}
 
-cd ${CURRENTWORKDIR}
+start_chosen_flavor ${FLAVOR}

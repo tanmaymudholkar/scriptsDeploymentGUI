@@ -1,21 +1,17 @@
 #!/bin/bash
 
-FLAVOR=online
-CURRENTWORKDIR=`pwd`
+source defaults.sh
+source commonFunctions.sh
 
-cd /tmp/tmudholk/gui
-SEARCHFORRUNNINGGUI=`ps aux | grep -v grep | grep visDQMRender`
-if [ -z "${SEARCHFORRUNNINGGUI}" ]; then
-    echo "No DQM process found running!"
-else
-    echo "Stopping DQM processes..."
+set_guipath
+cd ${GUIPATH}/gui
+
+show_dqm_status
+
+update_dqm_gui_status
+
+if [ ${DQM_GUI_STATUS} == "up" ]; then
+    stop_chosen_flavor ${FLAVOR}
 fi
 
-$PWD/current/config/dqmgui/manage -f ${FLAVOR} stop "I did read documentation"
-if [ $? -ne 0 ]; then
-    echo "Something went wrong in trying to stop the DQM instances... are you sure there were any?"
-fi
-
-rm -rf /tmp/tmudholk/gui
-
-cd ${CURRENTWORKDIR}
+rm -rf ${GUIPATH}/gui
