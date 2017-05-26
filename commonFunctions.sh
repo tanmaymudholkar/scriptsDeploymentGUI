@@ -145,7 +145,7 @@ check_user_OK() {
     read user_response
     parsed_user_response=$(echo ${user_response} | grep -e "^[yn]$")
     while [ -z "${parsed_user_response}" ]; do
-        echo "Pleas enter y or n. OK to proceed? (y/n): "
+        echo "Please enter y or n. OK to proceed? (y/n): "
         read user_response
         parsed_user_response=$(echo ${user_response} | grep -e "^[yn]$")
     done
