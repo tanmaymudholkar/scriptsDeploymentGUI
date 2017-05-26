@@ -5,7 +5,7 @@ source commonFunctions.sh
 
 echo "Please check these settings for the online DQM:" && cat defaults.sh && check_user_OK
 
-set_guipath # sets guipath
+set_os_dependent_env_vars
 
 exit_if_gui_up
 
@@ -30,7 +30,7 @@ fi
 
 set_latest_tag # sets LATESTTAG
 
-dqm_deploy ${LATESTTAG}
+dqm_deploy ${LATESTTAG} ${DEPLOYMENT_VERSION}
 
 source_env
 

@@ -5,15 +5,32 @@ check_number_of_arguments() { # Syntax: check_number_of_arguments expected-numbe
     fi
 }
 
-set_guipath() {
-    check_number_of_arguments 0 "set_guipath" $@
+set_os_dependent_env_vars() {
+    check_number_of_arguments 0 "set_os_dependent_env_vars" $@
     GUIPATH="/dqm-gui"
     BASEHOSTNAME=$(echo $HOSTNAME | sed "s|\([^\.]*\)\.cern\.ch|\1|")
+    DEPLOYMENT_VERSION=""
+    BASEDEPVERSION=$(cat /etc/redhat-release)
+
+    possibly_slc6=$(echo "${BASEDEPVERSION}" | grep -e "^Scientific Linux CERN SLC release 6.*")
+    possibly_cc7=$(echo ${BASEDEPVERSION} | grep -e "^CentOS Linux release 7.*")
+    if [ -n "${possibly_slc6}" ]; then
+        DEPLOYMENT_VERSION="slc6"
+    elif [ -n "${possibly_cc7}" ]; then
+        DEPLOYMENT_VERSION="cc7"
+    else
+        echo "Either OS info not found in /etc/redhat-release, or found info does not match SLC6 or CC7. BASEDEPVERSION = ${BASEDEPVERSION}"
+        exit
+    fi
+    
     if [[ "$BASEHOSTNAME" =~ ^lxplus[0-9]{3,4}$ ]]; then
         GUIPATH="/tmp/tmudholk"
+        DEPLOYMENT_VERSION="slc6" # yes, even for lxplus7
     fi
-    echo "Setting GUIPATH to ${GUIPATH}"
+    
+    echo "Setting GUIPATH to ${GUIPATH}, DEPLOYMENT_VERSION to ${DEPLOYMENT_VERSION}"
     export GUIPATH
+    export DEPLOYMENT_VERSION
 }
 
 search_for_running_gui() {
@@ -96,9 +113,15 @@ set_latest_tag() {
 }
 
 dqm_deploy() {
-    check_number_of_arguments 1 "dqm_deploy" $@
+    check_number_of_arguments 2 "dqm_deploy" $@
     echo "Deploying DQM..."
-    $PWD/deployment/Deploy -A slc6_amd64_gcc493 -r "comp=comp" -R comp@${1} -t MYDEV -s "prep sw post" $PWD dqmgui/bare
+    if [ "${2}" == "slc6" ]; then
+        $PWD/deployment/Deploy -A slc6_amd64_gcc493 -r "comp=comp" -R comp@${1} -t MYDEV -s "prep sw post" $PWD dqmgui/bare
+    elif [ "${2}" == "cc7" ]; then
+        $PWD/deployment/Deploy -A slc7_amd64_gcc630 -r "comp=comp" -R comp@${1} -t MYDEV -s "prep sw post" $PWD dqmgui/bare
+    else
+        echo "Unrecognized DEPLOYMENT_VERSION: ${2}"
+    fi
     print_potential_error $? "Unable to (re-)deploy!"
 }
 

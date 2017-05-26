@@ -3,7 +3,7 @@
 source defaults.sh
 source commonFunctions.sh
 
-set_guipath
+set_os_dependent_env_vars
 
 cd ${GUIPATH}/gui
 show_dqm_status
@@ -29,6 +29,6 @@ cd ..
 
 set_latest_tag
 
-dqm_deploy ${LATESTTAG}
+dqm_deploy ${LATESTTAG} ${DEPLOYMENT_VERSION}
 
 start_chosen_flavor ${FLAVOR}
