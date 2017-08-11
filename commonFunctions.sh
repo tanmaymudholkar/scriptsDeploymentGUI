@@ -9,6 +9,7 @@ set_os_dependent_env_vars() {
     check_number_of_arguments 0 "set_os_dependent_env_vars" $@
     GUIPATH="/dqm-gui"
     BASEHOSTNAME=$(echo $HOSTNAME | sed "s|\([^\.]*\)\.cern\.ch|\1|")
+    PATHTODQMFILES=/afs/cern.ch/work/t/tmudholk/public/DQMUploads_${BASEHOSTNAME}
     DEPLOYMENT_VERSION=""
     BASEDEPVERSION=$(cat /etc/redhat-release)
 
@@ -26,11 +27,13 @@ set_os_dependent_env_vars() {
     if [[ "$BASEHOSTNAME" =~ ^lxplus[0-9]{3,4}$ ]]; then
         GUIPATH="/tmp/tmudholk"
         DEPLOYMENT_VERSION="slc6" # yes, even for lxplus7
+        PATHTODQMFILES=/afs/cern.ch/work/t/tmudholk/public/DQMUploads
     fi
     
-    echo "Setting GUIPATH to ${GUIPATH}, DEPLOYMENT_VERSION to ${DEPLOYMENT_VERSION}"
+    echo "Setting GUIPATH to ${GUIPATH}, DEPLOYMENT_VERSION to ${DEPLOYMENT_VERSION}, PATHTODQMFILES to ${PATHTODQMFILES}"
     export GUIPATH
     export DEPLOYMENT_VERSION
+    export PATHTODQMFILES
 }
 
 search_for_running_gui() {
@@ -165,17 +168,61 @@ refresh_files() {
 
 check_user_OK() {
     echo "OK to proceed? (y/n): "
-    read user_response
-    parsed_user_response=$(echo ${user_response} | grep -e "^[yn]$")
-    while [ -z "${parsed_user_response}" ]; do
+    read user_input
+    parsed_user_input=$(echo ${user_input} | grep -e "^[yn]$")
+    while [ -z "${parsed_user_input}" ]; do
         echo "Please enter y or n. OK to proceed? (y/n): "
-        read user_response
-        parsed_user_response=$(echo ${user_response} | grep -e "^[yn]$")
+        read user_input
+        parsed_user_input=$(echo ${user_input} | grep -e "^[yn]$")
     done
-    if [ ${user_response} == "y" ]; then
+    if [ ${user_input} == "y" ]; then
         echo "OK, proceeding!"
     else
         echo "Terminating..."
+        exit
+    fi
+}
+
+get_user_input() {
+    check_number_of_arguments 2 "get_user_input" $@
+    echo "Please enter value of: $1 (Return for default: $2):  "
+    read user_input
+    if [ -z "${user_input}" ]; then
+        echo "Using default value, $2, for $1"
+    else
+        echo "Using value ${user_input} for $1"
+    fi
+    export user_input
+}
+
+create_host_specific_config() {
+    check_number_of_arguments 0 "create_host_specific_config" $@
+    
+    get_user_input "FLAVOR" "online"
+    if [ -z "${user_input}" ]; then
+        FLAVOR=online
+    else
+        FLAVOR=${user_input}
+    fi
+
+    get_user_input "GITHUB_BRANCH" "master"
+    if [ -z "${user_input}" ]; then
+        GITHUB_BRANCH="master"
+    else
+        GITHUB_BRANCH=${user_input}
+    fi
+
+    rm -f hostSpecificConfig.sh && touch hostSpecificConfig.sh
+    echo "export FLAVOR=${FLAVOR}" >> hostSpecificConfig.sh
+    echo "export GITHUB_BRANCH=${GITHUB_BRANCH}" >> hostSpecificConfig.sh
+}
+
+source_host_specific_config() {
+    check_number_of_arguments 0 "source_host_specific_config" $@
+    if [ -f hostSpecificConfig.sh ]; then
+        source hostSpecificConfig.sh
+    else
+        echo "Host-specific config not found in ${PWD}!"
         exit
     fi
 }

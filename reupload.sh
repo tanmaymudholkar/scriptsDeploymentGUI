@@ -1,11 +1,12 @@
 #!/bin/bash
 
-source defaults.sh
 source commonFunctions.sh
 
 set_os_dependent_env_vars
-cd ${GUIPATH}/gui
+cd ${GUIPATH}
+source_host_specific_config
 
+cd gui
 source_env
 
 refresh_files ${PATHTODQMFILES}

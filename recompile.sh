@@ -1,11 +1,12 @@
 #!/bin/bash
 
-source defaults.sh
 source commonFunctions.sh
 
 set_os_dependent_env_vars
+cd ${GUIPATH}
+source_host_specific_config
 
-cd ${GUIPATH}/gui
+cd gui
 show_dqm_status
 
 update_dqm_gui_status
