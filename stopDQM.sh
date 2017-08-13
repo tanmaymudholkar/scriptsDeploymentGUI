@@ -15,4 +15,4 @@ if [ ${DQM_GUI_STATUS} == "up" ]; then
     stop_chosen_flavor ${FLAVOR}
 fi
 
-cd && rm -rf ${GUIPATH}/gui
+cd && rm -rf ${GUIPATH}/gui && rm -f ${GUIPATH}/hostSpecificConfig.sh
