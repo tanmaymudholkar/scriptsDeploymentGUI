@@ -3,7 +3,9 @@
 echo "Performing first time setup..."
 echo "Installing packages..."
 sudo yum -y install git bzip2 perl-Switch perl-Env perl-Thread-Queue libXpm-devel libXext-devel mesa-libGLU-devel libXinerama libXi libXft-devel libXrandr libXcursor zsh tk perl-ExtUtils-Embed compat-libstdc++-33 libXmu
-echo "Installed. Opening port 8070, 8080 and 8081..."
+echo "Installed. Opening ports 9190, 8070, 8080, and 8081..."
+sudo firewall-cmd --zone=public --add-port=9190/tcp --permanent
+echo "...Opened 9190..."
 sudo firewall-cmd --zone=public --add-port=8070/tcp --permanent
 echo "...Opened 8070..."
 sudo firewall-cmd --zone=public --add-port=8080/tcp --permanent
