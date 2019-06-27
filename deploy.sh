@@ -1,15 +1,15 @@
 #!/bin/bash
 
 source commonFunctions.sh
-set_os_dependent_env_vars
+set_os_dependent_env_vars # sets GUIPATH, DEPLOYMENT_VERSION, PATHTODQMFILES
 
 exit_if_gui_up
 
 cd ${GUIPATH} && mkdir -p gui
 print_potential_error $? "Something went wrong in creating ${GUIPATH}/gui, please check"
 
-create_host_specific_config
-source_host_specific_config
+create_host_specific_config # reads in FLAVOR and GITHUB_BRANCH and writes export statements to hostSpecificConfig.sh
+source_host_specific_config # sources hostSpecificConfig.sh
 
 cd gui && git clone git@github.com:dmwm/deployment
 print_potential_error $? "Something went wrong in cloning from git repo, please check"
