@@ -155,8 +155,8 @@ refresh_files() {
         echo "Detected new file: ${fileToUpload}"
         if [ ${FLAVOR} == online ]; then
             visDQMIndex add --dataset /Global/Online/ALL state/dqmgui/online/ix128 ${fileToUpload}
-        elif [ ${FLAVOR} == offline ]; then
-            visDQMIndex add state/dqmgui/offline/ix128 ${fileToUpload}
+        else
+            visDQMIndex add state/dqmgui/${FLAVOR}/ix128 ${fileToUpload}
         fi
         print_potential_error $? "Unable to upload ${fileToUpload} to DQM instance!"
         mkdir -p ${1}/closed
